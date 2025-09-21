@@ -3,8 +3,104 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Habit Tracker</title>
+  <title>Habit Forge</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="Habit Forge - Build Better Habits">
+  <meta name="description" content="A simple and intuitive habit tracker to help you build and maintain good habits.">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://msinghal34.github.io/HabitForge/">
+  <meta property="og:title" content="Habit Forge - Build Better Habits">
+  <meta property="og:description"
+    content="A simple and intuitive habit tracker to help you build and maintain good habits.">
+  <meta property="og:image" content="https://msinghal34.github.io/HabitForge/sample.png">
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://msinghal34.github.io/HabitForge/">
+  <meta property="twitter:title" content="Habit Forge - Build Better Habits">
+  <meta property="twitter:description"
+    content="A simple and intuitive habit tracker to help you build and maintain good habits.">
+  <meta property="twitter:image" content="https://msinghal34.github.io/HabitForge/sample.png">
   <style>
+    /* Help Button Styles */
+    .help-icon {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      background-color: #f0f0f0;
+      color: #666;
+      border-radius: 50%;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: all 0.2s;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .help-icon:hover {
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 25px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .close-modal {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .modal p {
+      line-height: 1.6;
+      color: #444;
+    }
+
+    .modal ul {
+      padding-left: 20px;
+    }
+
+    .modal li {
+      margin-bottom: 8px;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -112,7 +208,7 @@
       width: 80px;
       min-width: 80px;
     }
-    
+
     /* Day cells */
     th:nth-child(n+4):not(:last-child),
     td:nth-child(n+4):not(:last-child) {
@@ -120,8 +216,9 @@
       min-width: 40px;
       box-sizing: border-box;
     }
-    
+
     @media (max-width: 768px) {
+
       th:nth-child(n+4):not(:last-child),
       td:nth-child(n+4):not(:last-child) {
         width: 36px;
@@ -129,27 +226,27 @@
         padding: 6px 2px;
         font-size: 0.9em;
       }
-      
+
       .day-header {
         min-width: 36px !important;
         padding: 4px 2px !important;
       }
-      
+
       .day-header .date {
         font-size: 10px;
       }
-      
+
       th:first-child,
       td:first-child {
         width: 36px !important;
       }
-      
+
       th:nth-child(2),
       td:nth-child(2) {
         min-width: 150px !important;
       }
     }
-    
+
     /* Summary column (last column) */
     th:last-child,
     td:last-child {
@@ -163,11 +260,12 @@
       -webkit-overflow-scrolling: touch;
       margin: 10px 0;
     }
-    
+
     table {
       border-collapse: collapse;
       width: 100%;
-      min-width: 900px; /* Minimum width before horizontal scroll appears */
+      min-width: 900px;
+      /* Minimum width before horizontal scroll appears */
       margin: 0;
       table-layout: fixed;
     }
@@ -341,43 +439,66 @@
 </head>
 
 <body>
-  <div class="container">
-    <h2>Simple Habit Tracker</h2>
-    <div class="table-container">
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeHelp()">&times;</span>
+      <h2>About HabitForge</h2>
+      <p align="center"> No tracking, no ads, no internet, nothing!</p>
+      <p>Welcome to HabitForge, a simple and intuitive habit tracker to help you build and maintain good habits.</p>
 
-    <div class="header-controls">
-      <div class="week-nav">
-        <button class="btn btn-secondary" onclick="changeWeek(-1)">⬅ Prev Week</button>
-        <span id="weekLabel" style="font-weight:bold; margin: 0 10px;"></span>
-        <button class="btn btn-secondary" onclick="changeWeek(1)">Next Week ➡</button>
-        <button class="btn" onclick="goToToday()">📅 Go to Today</button>
-      </div>
+      <h3>How to Use:</h3>
+      <ul>
+        <li><strong>Add Habit</strong>: Click the "+ Add Habit" button or press 'N' key</li>
+        <li><strong>Track Progress</strong>: Click on the rectangles to track your daily progress</li>
+        <li><strong>Edit Habits</strong>: Click on habit names to edit them</li>
+        <li><strong>Set Goals</strong>: Click on the number next to the habit to set your weekly goals</li>
+        <li><strong>Navigate Weeks</strong>: Use the Previous/Next Week buttons or drag habits to reorder them</li>
+      </ul>
 
-      <div class="controls">
-        <button class="btn" onclick="addHabit()">+ Add Habit (N)</button>
-        <button class="btn btn-secondary" onclick="deleteSelected()">🗑 Delete Selected</button>
-        <button class="btn btn-secondary" onclick="clearWeek()">Clear This Week</button>
-        <button class="btn btn-danger" onclick="clearAll()">🔥 Clear All (keep habits)</button>
-      </div>
+      <p>Your data is automatically saved in your browser's local storage.</p>
+      <p>Made with ❤️ by <a href="https://github.com/msinghal34/HabitForge" target="_blank">msinghal34</a></p>
     </div>
+  </div>
 
-    <table id="habitTable">
-      <thead>
-        <tr>
-          <th>Select</th>
-          <th>Habit</th>
-          <th>Goal (days)</th>
-          <th class="day-header" data-day="Mon"></th>
-          <th class="day-header" data-day="Tue"></th>
-          <th class="day-header" data-day="Wed"></th>
-          <th class="day-header" data-day="Thu"></th>
-          <th class="day-header" data-day="Fri"></th>
-          <th class="day-header" data-day="Sat"></th>
-          <th class="day-header" data-day="Sun"></th>
-          <th>Summary</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+  <div class="container" style="position: relative;">
+    <h2 style="margin-bottom: 40px; margin-top: 15px;">Simple Habit Tracker</h2>
+    <div class="help-icon" onclick="openHelp()" title="Click for help">?</div>
+    <div class="table-container" style="margin-top: 25px;">
+
+      <div class="header-controls">
+        <div class="week-nav">
+          <button class="btn btn-secondary" onclick="changeWeek(-1)">⬅ Prev Week</button>
+          <span id="weekLabel" style="font-weight:bold; margin: 0 10px;"></span>
+          <button class="btn btn-secondary" onclick="changeWeek(1)">Next Week ➡</button>
+          <button class="btn" onclick="goToToday()">📅 Go to Today</button>
+        </div>
+
+        <div class="controls">
+          <button class="btn" onclick="addHabit()">+ Add Habit (N)</button>
+          <button class="btn btn-secondary" onclick="deleteSelected()">🗑 Delete Selected</button>
+          <button class="btn btn-secondary" onclick="clearWeek()">Clear This Week</button>
+          <button class="btn btn-danger" onclick="clearAll()">🔥 Clear All (keep habits)</button>
+        </div>
+      </div>
+
+      <table id="habitTable">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th>Habit</th>
+            <th>Goal (days)</th>
+            <th class="day-header" data-day="Mon"></th>
+            <th class="day-header" data-day="Tue"></th>
+            <th class="day-header" data-day="Wed"></th>
+            <th class="day-header" data-day="Thu"></th>
+            <th class="day-header" data-day="Fri"></th>
+            <th class="day-header" data-day="Sat"></th>
+            <th class="day-header" data-day="Sun"></th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
       </table>
     </div>
   </div>
@@ -397,7 +518,7 @@
       { habit: "Meditation", goal: 3 },
       { habit: "Work 4 hours", goal: 5 },
       { habit: "Journaling", goal: 1 },
-      { habit: "Talk to someone", goal: 1 },
+      { habit: "Talk to someone new", goal: 1 },
     ];
 
     // --- Date utilities ---
@@ -1017,11 +1138,38 @@
       }
     });
 
+    // Help modal functions
+    function openHelp() {
+      document.getElementById('helpModal').style.display = 'flex';
+    }
+
+    function closeHelp() {
+      document.getElementById('helpModal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside the content
+    window.onclick = function (event) {
+      const modal = document.getElementById('helpModal');
+      if (event.target == modal) {
+        closeHelp();
+      }
+    }
+
     // initial load
     loadData();
     setupDragAndDrop();
-
   </script>
+  <footer
+    style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; color: #666; font-size: 14px; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #eee;">
+    <a href="#" onclick="openHelp(); return false;"
+      style="color: #4a6baf; text-decoration: none; font-weight: 500;">Help</a>
+    <div>
+      Made with ❤️ by <a href="https://github.com/msinghal34/HabitForge" target="_blank"
+        style="color: #4a6baf; text-decoration: none;">msinghal34</a>
+    </div>
+    <div style="width: 40px;"></div> <!-- This balances the layout -->
+  </footer>
+  <div style="height: 60px;"></div> <!-- Spacer to prevent content from being hidden behind the fixed footer -->
 </body>
 
 </html>
