@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Habit Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 15px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    /* Drag and Drop Styles */
+    .drag-handle {
+      cursor: grab;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      color: #999;
+      user-select: none;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 4px;
+      position: relative;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .drag-handle {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      width: 24px;
+      height: 20px;
+      padding: 0 2px;
+      cursor: grab;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    .drag-handle span {
+      display: block;
+      width: 4px;
+      height: 4px;
+      background-color: #666;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .drag-handle:hover {
+      background-color: #f0f0f0;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s, box-shadow 0.15s;
+      position: relative;
+      background: white;
+    }
+
+    tbody tr.dragging {
+      opacity: 0.6;
+      background: #f8f9fa;
+    }
+
+    tbody tr.drag-over-target {
+      background-color: #e6f3ff !important;
+      box-shadow: 0 0 0 1px #2196f3;
+      position: relative;
+      z-index: 1;
+    }
+
+    tbody tr.drag-over-below {
+      position: relative;
+    }
+
+    tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      /* Drag handle column */
+      width: 40px;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      /* Habit column */
+      min-width: 200px;
+      width: 25%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      /* Goal column */
+      width: 80px;
+      min-width: 80px;
+    }
+    
+    /* Day cells */
+    th:nth-child(n+4):not(:last-child),
+    td:nth-child(n+4):not(:last-child) {
+      width: 40px;
+      min-width: 40px;
+      box-sizing: border-box;
+    }
+    
+    @media (max-width: 768px) {
+      th:nth-child(n+4):not(:last-child),
+      td:nth-child(n+4):not(:last-child) {
+        width: 36px;
+        min-width: 36px;
+        padding: 6px 2px;
+        font-size: 0.9em;
+      }
+      
+      .day-header {
+        min-width: 36px !important;
+        padding: 4px 2px !important;
+      }
+      
+      .day-header .date {
+        font-size: 10px;
+      }
+      
+      th:first-child,
+      td:first-child {
+        width: 36px !important;
+      }
+      
+      th:nth-child(2),
+      td:nth-child(2) {
+        min-width: 150px !important;
+      }
+    }
+    
+    /* Summary column (last column) */
+    th:last-child,
+    td:last-child {
+      width: 80px;
+      min-width: 80px;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 10px 0;
+    }
+    
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 900px; /* Minimum width before horizontal scroll appears */
+      margin: 0;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* Ensure first cell content is properly aligned */
+    td:first-child {
+      white-space: nowrap;
+      padding: 8px 4px;
+    }
+
+    th {
+      background: #f4f4f4;
+    }
+
+    td.day {
+      cursor: pointer;
+      width: 40px;
+    }
+
+    .checked {
+      background: #4caf50;
+      color: white;
+    }
+
+    /* Header controls centered and stacked */
+    .header-controls {
+      max-width: 950px;
+      margin: 0 auto 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .week-nav,
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      margin: 3px;
+      background-color: #2196f3;
+      color: white;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #1976d2;
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+    }
+
+    .btn-danger:hover {
+      background-color: #c62828;
+    }
+
+    .btn-secondary {
+      background-color: #9e9e9e;
+    }
+
+    .btn-secondary:hover {
+      background-color: #616161;
+    }
+
+    input.goal-input {
+      width: 40px;
+      text-align: center;
+      -moz-appearance: textfield;
+      /* Firefox */
+      appearance: textfield;
+      /* Standard */
+    }
+
+    /* Hide number input spinners in Chrome, Safari, Edge, and Opera */
+    input.goal-input::-webkit-outer-spin-button,
+    input.goal-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    /* day-header stacked: day on top, date below (no wrapping) */
+    .day-header {
+      text-align: center;
+      vertical-align: middle;
+      min-width: 68px;
+      padding: 6px 8px;
+    }
+
+    .day-header .day {
+      display: block;
+      font-weight: bold;
+    }
+
+    .day-header .date {
+      display: block;
+      font-size: 12px;
+      color: #555;
+      white-space: nowrap;
+      margin-top: 3px;
+    }
+
+    .day-header.today {
+      background: #ffe082;
+      border-radius: 4px;
+    }
+
+    /* Summary entire cell acts like a progress block */
+    .summary {
+      width: 80px;
+      min-width: 80px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.95em;
+      padding: 8px 6px;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* keep contenteditable look simple */
+    span[contenteditable] {
+      outline: none;
+      display: inline-block;
+      min-width: 100px;
+      max-width: 200px;
+      /* Set a max-width for the ellipsis to work */
+      white-space: nowrap;
+      /* force single line */
+      overflow: hidden;
+      /* required for text-overflow */
+      text-overflow: ellipsis;
+      /* shows "..." if name is too long */
+      vertical-align: middle;
+      /* better alignment */
+      padding: 2px 4px;
+      /* add some padding for better UX */
+    }
+
+    /* Show full content on focus */
+    span[contenteditable]:focus {
+      white-space: normal;
+      overflow: visible;
+      background: #f8f8f8;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 0 0 2px #2196f3;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Simple Habit Tracker</h2>
+    <div class="table-container">
+
+    <div class="header-controls">
+      <div class="week-nav">
+        <button class="btn btn-secondary" onclick="changeWeek(-1)">⬅ Prev Week</button>
+        <span id="weekLabel" style="font-weight:bold; margin: 0 10px;"></span>
+        <button class="btn btn-secondary" onclick="changeWeek(1)">Next Week ➡</button>
+        <button class="btn" onclick="goToToday()">📅 Go to Today</button>
+      </div>
+
+      <div class="controls">
+        <button class="btn" onclick="addHabit()">+ Add Habit (N)</button>
+        <button class="btn btn-secondary" onclick="deleteSelected()">🗑 Delete Selected</button>
+        <button class="btn btn-secondary" onclick="clearWeek()">Clear This Week</button>
+        <button class="btn btn-danger" onclick="clearAll()">🔥 Clear All (keep habits)</button>
+      </div>
+    </div>
+
+    <table id="habitTable">
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Habit</th>
+          <th>Goal (days)</th>
+          <th class="day-header" data-day="Mon"></th>
+          <th class="day-header" data-day="Tue"></th>
+          <th class="day-header" data-day="Wed"></th>
+          <th class="day-header" data-day="Thu"></th>
+          <th class="day-header" data-day="Fri"></th>
+          <th class="day-header" data-day="Sat"></th>
+          <th class="day-header" data-day="Sun"></th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "habitTrackerDataV8";
+    const tbody = document.getElementById("habitTable").tBodies[0];
+    const weekLabel = document.getElementById("weekLabel");
+
+    // compute current week - Monday as start
+    let todayMonday = getMonday(new Date());
+    let currentMonday = new Date(todayMonday);
+
+    const DEFAULT_HABITS = [
+      { habit: "Sleep on time", goal: 7 },
+      { habit: "Workout", goal: 3 },
+      { habit: "Meditation", goal: 3 },
+      { habit: "Work 4 hours", goal: 5 },
+      { habit: "Journaling", goal: 1 },
+      { habit: "Talk to someone", goal: 1 },
+    ];
+
+    // --- Date utilities ---
+    function getMonday(d) {
+      d = new Date(d);
+      let day = d.getDay();
+      let diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff));
+    }
+    function formatDate(d) { return d.toISOString().split("T")[0]; }
+    function getWeekRange(monday) {
+      let sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      // nicer short range like "Mon 21 Sep — Sun 27 Sep"
+      const opt = { day: "2-digit", month: "short" };
+      let a = monday.toLocaleDateString("en-GB", opt);
+      let b = sunday.toLocaleDateString("en-GB", opt);
+      return `${a} — ${b}`;
+    }
+    function getWeekKey(monday) { return "week_" + formatDate(monday); }
+
+    // --- Drag and Drop Functionality ---
+    function setupDragAndDrop() {
+      let draggedItem = null;
+      let dragStartY = 0;
+      let dragStartIndex = 0;
+      let isDragging = false;
+      let lastHoveredRow = null;
+      let dragThreshold = 5; // Minimum pixels to move before starting drag
+      let hasMoved = false;
+
+      // Make rows draggable only through the handle
+      const makeRowsDraggable = () => {
+        document.querySelectorAll('tbody tr').forEach((row, index) => {
+          // Skip if already has a handle
+          if (row.querySelector('.drag-handle')) return;
+
+          const handle = document.createElement('div');
+          handle.className = 'drag-handle';
+          handle.setAttribute('aria-label', 'Drag to reorder');
+
+          // Create three dots
+          for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('span');
+            handle.appendChild(dot);
+          }
+
+          // Prepend handle to first cell
+          const firstCell = row.querySelector('td:first-child');
+          if (firstCell) {
+            firstCell.insertBefore(handle, firstCell.firstChild);
+          }
+
+          // Handle drag start
+          handle.addEventListener('mousedown', function (e) {
+            // Only left mouse button
+            if (e.button !== 0) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Initialize drag
+            draggedItem = row;
+            dragStartY = e.clientY;
+            dragStartIndex = Array.from(tbody.rows).indexOf(row);
+            isDragging = false;
+            hasMoved = false;
+
+            // Store initial positions
+            const rect = row.getBoundingClientRect();
+            const startX = e.clientX - rect.left;
+            const startY = e.clientY - rect.top;
+
+            // Track mouse movement
+            const onMouseMove = (e) => {
+              if (!draggedItem) return;
+
+              const dx = Math.abs(e.clientX - startX);
+              const dy = Math.abs(e.clientY - startY);
+
+              // Check if we've moved enough to start dragging
+              if (!isDragging && (dx > dragThreshold || dy > dragThreshold)) {
+                isDragging = true;
+                hasMoved = true;
+                row.classList.add('dragging');
+                document.body.style.userSelect = 'none';
+                document.addEventListener('mousemove', handleDrag, true);
+              }
+
+              if (isDragging) {
+                handleDrag(e);
+              }
+            };
+
+            // Clean up
+            const onMouseUp = (e) => {
+              if (hasMoved) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Find the row we're hovering over
+                const rows = Array.from(tbody.rows);
+                const hoveredElement = document.elementFromPoint(e.clientX, e.clientY);
+                const hoveredRow = hoveredElement?.closest('tr');
+
+                if (hoveredRow && hoveredRow !== draggedItem) {
+                  const targetIndex = rows.indexOf(hoveredRow);
+                  const currentIndex = rows.indexOf(draggedItem);
+
+                  // Only move if it's a different position
+                  if (targetIndex !== -1 && targetIndex !== currentIndex) {
+                    if (targetIndex < currentIndex) {
+                      hoveredRow.before(draggedItem);
+                    } else {
+                      hoveredRow.after(draggedItem);
+                    }
+                    saveData();
+                  }
+                }
+              }
+
+              // Cleanup
+              cleanup();
+            };
+
+            // Handle cleanup
+            const cleanup = () => {
+              document.removeEventListener('mousemove', onMouseMove, true);
+              document.removeEventListener('mouseup', onMouseUp, true);
+              document.body.style.userSelect = '';
+
+              if (draggedItem) {
+                draggedItem.classList.remove('dragging');
+                draggedItem = null;
+              }
+
+              // Remove highlights
+              document.querySelectorAll('tr.drag-over-target').forEach(el => {
+                el.classList.remove('drag-over-target');
+              });
+
+              isDragging = false;
+              lastHoveredRow = null;
+            };
+
+            // Add event listeners
+            document.addEventListener('mousemove', onMouseMove, true);
+            document.addEventListener('mouseup', onMouseUp, { once: true, capture: true });
+          });
+
+          // Prevent text selection when dragging the handle
+          handle.addEventListener('selectstart', (e) => {
+            if (isDragging) {
+              e.preventDefault();
+              return false;
+            }
+          });
+        });
+      };
+
+      // Initialize drag functionality
+      makeRowsDraggable();
+
+      // Function to handle drag movement
+      const handleDrag = (e) => {
+        if (!draggedItem) return;
+
+        const rows = Array.from(tbody.rows);
+        const containerRect = tbody.getBoundingClientRect();
+
+        // Remove highlight from all rows
+        rows.forEach(row => row.classList.remove('drag-over-target'));
+
+        // Check if we're at the bottom of the container
+        const isAtBottom = e.clientY > containerRect.bottom - 30;
+
+        if (isAtBottom) {
+          const lastRow = rows[rows.length - 1];
+          if (lastRow && lastRow !== draggedItem) {
+            lastRow.classList.add('drag-over-target');
+            lastHoveredRow = lastRow;
+          }
+          return;
+        }
+
+        // Find the row we're hovering over
+        const hoveredElement = document.elementFromPoint(e.clientX, e.clientY);
+        if (!hoveredElement) return;
+
+        const hoveredRow = hoveredElement.closest('tr');
+
+        if (hoveredRow && hoveredRow !== draggedItem && hoveredRow !== lastHoveredRow) {
+          hoveredRow.classList.add('drag-over-target');
+          if (lastHoveredRow && lastHoveredRow !== hoveredRow) {
+            lastHoveredRow.classList.remove('drag-over-target');
+          }
+          lastHoveredRow = hoveredRow;
+        }
+
+        // Prevent row from being draggable
+        row.draggable = false;
+        row.style.userSelect = 'text';
+        row.style.cursor = 'grabbing';
+      };
+
+
+      function onMouseMove(e) {
+        if (!draggedItem) return;
+
+        // Get all rows and the container
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const containerRect = tbody.getBoundingClientRect();
+
+        // Remove highlight from all rows
+        rows.forEach(row => row.classList.remove('drag-over-target'));
+
+        // Check if we're at the bottom of the container (for dropping as last item)
+        const isAtBottom = e.clientY > containerRect.bottom - 30; // Increased the threshold
+
+        if (isAtBottom) {
+          const lastRow = rows[rows.length - 1];
+          if (lastRow && lastRow !== draggedItem) {
+            lastRow.classList.add('drag-over-target');
+          }
+          return;
+        }
+
+        // Find the row we're hovering over
+        const hoveredElement = document.elementFromPoint(e.clientX, e.clientY);
+        if (!hoveredElement) return;
+
+        const hoveredRow = hoveredElement.closest('tbody tr');
+
+        if (hoveredRow && hoveredRow !== draggedItem) {
+          hoveredRow.classList.add('drag-over-target');
+          const rect = hoveredRow.getBoundingClientRect();
+          const relativeY = e.clientY - rect.top;
+          const isAfter = relativeY > rect.height / 2;
+
+          if (isAfter) {
+            hoveredRow.classList.add('drag-over-below');
+          } else {
+            hoveredRow.classList.add('drag-over-above');
+          }
+        }
+      }
+
+
+      // Cleanup
+      document.removeEventListener('mousemove', onMouseMove, true);
+      document.removeEventListener('mouseup', onMouseUp, true);
+
+      document.querySelectorAll('tr').forEach(row => {
+        row.classList.remove('dragging', 'drag-over-above', 'drag-over-below');
+        row.style.cursor = '';
+      });
+
+      draggedItem = null;
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('tr:not(.dragging)')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // --- Habit table ---
+    function addHabit(name = "New Habit", goal = 3, save = true) {
+      let row = tbody.insertRow();
+      row.setAttribute('draggable', 'true');
+
+      // Select cell with checkbox
+      let selectCell = row.insertCell();
+      let checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      selectCell.appendChild(checkbox);
+
+      // Habit cell
+      let habitCell = row.insertCell();
+      let span = document.createElement("span");
+      span.contentEditable = "true";
+      span.innerText = name;
+      span.addEventListener("input", () => { saveData(); });
+      habitCell.appendChild(span);
+
+      // Goal input
+      let goalCell = row.insertCell();
+      let input = document.createElement("input");
+      input.type = "number";
+      input.min = 0;
+      input.max = 7;
+      input.className = "goal-input";
+
+      // Set initial value - only set default if goal is invalid
+      input.value = (goal >= 0 && goal <= 7) ? goal : '';
+
+      const validateAndUpdateGoal = (forceDefault = false) => {
+        let value = parseInt(input.value);
+        const wasEmpty = isNaN(value) || input.value === '';
+
+        if (wasEmpty) {
+          // Only apply default if forcing (on save) or if field is being left empty
+          value = forceDefault ? 7 : '';
+        } else {
+          // Ensure value is within bounds
+          value = Math.max(0, Math.min(7, value));
+        }
+
+        // Only update if value changed
+        if (input.value !== String(value) && value !== '') {
+          input.value = value;
+        }
+
+        updateSummary();
+        saveData();
+      };
+
+      // Only validate on blur if there's a value
+      input.addEventListener('blur', () => {
+        if (input.value.trim() !== '') {
+          validateAndUpdateGoal();
+        }
+      });
+
+      // Handle Enter key
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          // Only validate if there's a value, otherwise leave empty
+          if (input.value.trim() !== '') {
+            validateAndUpdateGoal();
+          }
+          input.blur(); // Move focus away
+          return;
+        }
+
+        // Allow: backspace, delete, tab, escape, enter
+        if ([46, 8, 9, 27, 13].includes(e.keyCode) ||
+          // Allow: Ctrl+A, Command+A
+          (e.keyCode === 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+          // Allow: Ctrl+C, Command+C
+          (e.keyCode === 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+          // Allow: Ctrl+V, Command+V
+          (e.keyCode === 86 && (e.ctrlKey === true || e.metaKey === true)) ||
+          // Allow: home, end, left, right, down, up
+          (e.keyCode >= 35 && e.keyCode <= 40)) {
+          return;
+        }
+        // Ensure that it is a number and stop the keypress if not
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+        }
+      });
+
+      // Also validate on input change
+      input.addEventListener('change', validateAndUpdateGoal);
+      goalCell.appendChild(input);
+
+      // Day cells (7)
+      for (let i = 0; i < 7; i++) {
+        let cell = row.insertCell();
+        cell.className = "day";
+      }
+
+      // Summary cell
+      let summaryCell = row.insertCell();
+      summaryCell.className = "summary";
+
+      updateSummary();
+      if (save) saveData();
+    }
+
+    // Toggle day
+    document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("day")) {
+        e.target.classList.toggle("checked");
+        updateSummary();
+        saveData();
+      }
+    });
+
+    // Update summary per row - entire cell colored using HSL hue 0 -> 120
+    function updateSummary() {
+      for (let row of tbody.rows) {
+        let checks = 0;
+        for (let i = 3; i <= 9; i++) {
+          if (row.cells[i].classList.contains("checked")) checks++;
+        }
+        let goalInput = row.cells[2].querySelector("input");
+        let goal = parseInt(goalInput.value);
+        goal = isNaN(goal) ? 7 : Math.min(7, Math.max(0, goal));
+        let summaryCell = row.cells[10];
+
+        // reset
+        summaryCell.style.background = "";
+        summaryCell.textContent = "";
+
+        // Define color stops for different completion ratios
+        const colorStops = [
+          { ratio: 0.0, color: '#ff4d4d' },    // Red
+          { ratio: 0.2, color: '#ff8c66' },    // Light Red-Orange
+          { ratio: 0.4, color: '#ffcc66' },    // Orange-Yellow
+          { ratio: 0.6, color: '#ffeb99' },    // Light Yellow
+          { ratio: 0.8, color: '#b3e0b3' },    // Light Green
+          { ratio: 0.99, color: '#66cc66' },   // Medium Green
+          { ratio: 1.0, color: '#2d862d' }     // Dark Green
+        ];
+
+        let ratio = 1; // Default to green (complete) for goal=0
+
+        if (goal > 0) {
+          ratio = checks / goal;
+          if (ratio > 1) ratio = 1;
+        }
+
+        // Find the two colors to interpolate between
+        let startColor = colorStops[0];
+        let endColor = colorStops[colorStops.length - 1];
+
+        for (let i = 0; i < colorStops.length - 1; i++) {
+          if (ratio <= colorStops[i + 1].ratio) {
+            startColor = colorStops[i];
+            endColor = colorStops[i + 1];
+            break;
+          }
+        }
+
+        // Calculate the color based on the ratio between the two closest color stops
+        const colorRange = endColor.ratio - startColor.ratio;
+        const colorRatio = colorRange > 0 ? (ratio - startColor.ratio) / colorRange : 0;
+        const color = interpolateColor(startColor.color, endColor.color, colorRatio);
+
+        summaryCell.style.backgroundColor = color;
+        // Use white or black text based on background brightness for better contrast
+        summaryCell.style.color = getContrastColor(color);
+        summaryCell.textContent = goal === 0 ? "0/0" : `${checks}/${goal}`;
+
+        // Helper function to interpolate between two colors
+        function interpolateColor(color1, color2, factor) {
+          const hex = color => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+            return result ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16)
+            } : null;
+          };
+
+          const rgb1 = hex(color1);
+          const rgb2 = hex(color2);
+
+          const r = Math.round(rgb1.r + factor * (rgb2.r - rgb1.r));
+          const g = Math.round(rgb1.g + factor * (rgb2.g - rgb1.g));
+          const b = Math.round(rgb1.b + factor * (rgb2.b - rgb1.b));
+
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Helper function to determine text color based on background brightness
+        function getContrastColor(hexColor) {
+          // If the color is in rgb format, convert it to hex
+          if (hexColor.startsWith('rgb')) {
+            const rgb = hexColor.match(/\d+/g);
+            hexColor = '#' + ((1 << 24) + (+rgb[0] << 16) + (+rgb[1] << 8) + +rgb[2]).toString(16).slice(1);
+          }
+
+          // Convert hex to RGB
+          const r = parseInt(hexColor.substr(1, 2), 16);
+          const g = parseInt(hexColor.substr(3, 2), 16);
+          const b = parseInt(hexColor.substr(5, 2), 16);
+
+          // Calculate relative luminance (per ITU-R BT.709)
+          const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+          // Use white text for dark backgrounds, black for light backgrounds
+          return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+      }
+    }
+
+    // --- Storage ---
+    function saveData() {
+      let allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+      // global habits
+      let habits = [];
+      for (let row of tbody.rows) {
+        let habit = row.cells[1].querySelector("span").innerText.trim();
+        let goalInput = row.cells[2].querySelector("input");
+        // Parse the goal value, default to 7 only if the input is empty or invalid
+        let goal = parseInt(goalInput.value);
+        // Ensure value is between 0-7 (0 means no goal, 1-7 means daily goal)
+        goal = isNaN(goal) ? 7 : Math.min(7, Math.max(0, goal));
+        habits.push({ habit, goal });
+      }
+      allData["habits"] = habits;
+
+      // current week checkmarks
+      let weekKey = getWeekKey(currentMonday);
+      let weekData = [];
+      for (let row of tbody.rows) {
+        let days = [];
+        for (let i = 3; i <= 9; i++) {
+          days.push(row.cells[i].classList.contains("checked"));
+        }
+        weekData.push(days);
+      }
+      allData[weekKey] = weekData;
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    }
+
+    function loadData() {
+      tbody.innerHTML = "";
+      let allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      let habits = allData["habits"] || DEFAULT_HABITS;
+
+      let weekKey = getWeekKey(currentMonday);
+      let weekData = allData[weekKey] || [];
+
+      habits.forEach((h, idx) => {
+        addHabit(h.habit, h.goal, false); // don't save while building the UI
+        let row = tbody.rows[tbody.rows.length - 1];
+        if (weekData[idx]) {
+          for (let i = 0; i < 7; i++) {
+            if (weekData[idx][i]) row.cells[i + 3].classList.add("checked");
+          }
+        }
+      });
+
+      weekLabel.textContent = getWeekRange(currentMonday);
+      updateDayHeaders();
+      updateSummary();
+      setupDragAndDrop();
+    }
+
+    // --- Week navigation ---
+    function changeWeek(delta) {
+      currentMonday.setDate(currentMonday.getDate() + delta * 7);
+      loadData();
+    }
+    function goToToday() {
+      currentMonday = new Date(todayMonday);
+      loadData();
+    }
+
+    // Delete selected
+    function deleteSelected() {
+      let rows = Array.from(tbody.rows);
+      rows.forEach(row => {
+        if (row.cells[0].querySelector("input").checked) row.remove();
+      });
+      saveData();
+      updateSummary();
+    }
+
+    // Clear week and all
+    function clearWeek() {
+      if (confirm("Clear this week's checks?")) {
+        let allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        delete allData[getWeekKey(currentMonday)];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+        loadData();
+      }
+    }
+    function clearAll() {
+      if (confirm("Clear ALL weekly data but keep habits?")) {
+        let allData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        let habits = allData["habits"] || [];
+        let newData = { habits };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
+        loadData();
+      }
+    }
+
+    // --- Day header population (day above, date below) ---
+    function updateDayHeaders() {
+      const dayHeaders = document.querySelectorAll(".day-header");
+      const monday = new Date(currentMonday);
+      dayHeaders.forEach((th, i) => {
+        // prefer explicit data-day attribute but fallback to a short list
+        const fallback = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const dayName = th.dataset.day || fallback[i] || "";
+        let d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dateStr = d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" }); // "21 Sep"
+        th.innerHTML = `<span class="day">${dayName}</span><span class="date">${dateStr}</span>`;
+        th.classList.remove("today");
+        if (d.toDateString() === (new Date()).toDateString()) {
+          th.classList.add("today");
+        }
+      });
+    }
+
+    // --- Keyboard shortcut (N) ---
+    document.addEventListener("keydown", function (e) {
+      // ignore if typing in input
+      const active = document.activeElement;
+      const isTyping = active && (
+        active.tagName === "INPUT" ||
+        active.tagName === "TEXTAREA" ||
+        active.isContentEditable
+      );
+
+      if (!isTyping && e.key && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        addHabit();
+      }
+    });
+
+    // initial load
+    loadData();
+    setupDragAndDrop();
+
+  </script>
+</body>
+
+</html>
